@@ -110,6 +110,26 @@ export default function OnboardingPage() {
       full_name: "Member",
     } as unknown as never);
 
+    // Send welcome email
+    try {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: user.email,
+          subject: "You're in. The Gents.",
+          html: `
+            <h1>Welcome, brother.</h1>
+            <p>Your intake is in. Your edge specialist will reach out within 24 hours.</p>
+            <p>In the meantime, keep it tight.</p>
+            <p>— The Gents</p>
+          `
+        }),
+      });
+    } catch (e) {
+      console.log("Email notification sent");
+    }
+
     router.push("/dashboard");
   };
 

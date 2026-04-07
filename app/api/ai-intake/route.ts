@@ -1,54 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 export async function POST(request: NextRequest) {
   try {
-    const { messages, question, answer } = await request.json();
+    const { messages, answer } = await request.json();
 
-    const systemPrompt = `You are The Gentlemen's AI intake assistant. You're having a conversation with a new member. 
+    if (!OPENAI_API_KEY) {
+      return NextResponse.json(
+        { response: "Let's continue. What else should I know?", error: "AI unavailable" },
+        { status: 200 }
+      );
+    }
 
-Keep it SHORT and CONVERSATIONAL. No medical jargon. No clinical questions. 
+    const conversation = messages
+      .slice(-4)
+      .map((m: { role: string; content: string }) => 
+        `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+      )
+      .join('\n');
 
-Rules:
-- 1-2 sentences max per response
-- Ask follow-up questions naturally
-- Don't sound like a bot or form
-- Reference their previous answers
-- Stay in character as a savvy friend who gets it
+    const systemMessage = `You are The Gentlemen's AI intake. Keep responses SHORT (1-2 sentences). Be conversational like a savvy friend. Ask one question at a time.`;
 
-Previous context:`;
-
-    const conversationHistory = messages?.length 
-      ? messages.map((m: { role: string; content: string }) => 
-          `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
-        ).join('\n')
-      : '';
-
-    const fullPrompt = `${systemPrompt}\n${conversationHistory}\nUser just answered: "${answer}"\n\n${question}`;
-
-    const response = await fetch("http://localhost:11434/api/generate", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        model: "gemma:latest",
-        prompt: fullPrompt,
-        stream: false,
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemMessage },
+          ...messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content })),
+          { role: "user", content: answer }
+        ],
+        max_tokens: 150,
       }),
     });
 
-    if (!response.ok) {
-      throw new Error("Ollama request failed");
-    }
-
     const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Let's keep going.";
     
-    return NextResponse.json({ 
-      response: data.response,
-      status: "success"
-    });
+    return NextResponse.json({ response: reply });
   } catch (error) {
-    console.error("AI intake error:", error);
     return NextResponse.json(
-      { response: "Let's continue. What else should I know?", error: "AI unavailable" },
+      { response: "Let's wrap this up." },
       { status: 200 }
     );
   }
