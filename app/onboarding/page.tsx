@@ -16,161 +16,178 @@ const getSupabase = () => {
   return supabase;
 };
 
-const questions = [
-  {
-    id: "energy",
-    question: "How's your energy been lately?",
-    subtitle: "Rate your energy from 1-10",
-    type: "number",
-  },
-  {
-    id: "typical_day",
-    question: "What does a typical day look like for you?",
-    subtitle: "Describe your daily routine",
-    type: "text",
-  },
-  {
-    id: "edge_goal",
-    question: "What would getting your edge back mean to you?",
-    subtitle: "What does peak performance look like?",
-    type: "text",
-  },
-  {
-    id: "stress",
-    question: "How do you handle stress?",
-    subtitle: "Share what's been working (or not)",
-    type: "text",
-  },
-];
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+const openingQuestion = "Hey. So you're looking to get your edge back. Tell me - how's your energy been lately?";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string | number>>({});
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
+  const [complete, setComplete] = useState(false);
 
-  const currentQuestion = questions[step];
-  const isLastStep = step === questions.length - 1;
+  useEffect(() => {
+    setMessages([{ role: "assistant", content: openingQuestion }]);
+  }, []);
 
-  const handleNext = async () => {
-    if (isLastStep) {
-      setLoading(true);
-      const sb = getSupabase();
-      if (!sb) {
-        router.push("/dashboard");
-        return;
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setLoading(true);
+
+    try {
+      const nextQuestionResponses = [...messages, { role: "user", content: userMessage }];
+      
+      const questions = [
+        "Got it. And what's a typical day look like for you right now?",
+        "Makes sense. So what does getting your edge back actually mean to you? What does peak performance look like?",
+        "Last one - how do you handle stress? What's been working or not?",
+        "That's it. I'll get this to your edge specialist. They'll be in touch within 24 hours."
+      ];
+
+      const response = await fetch("/api/ai-intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextQuestionResponses,
+          question: nextQuestionResponses.length > 0 ? nextQuestionResponses[nextQuestionResponses.length - 1].content : "",
+          answer: userMessage
+        }),
+      });
+
+      const data = await response.json();
+
+      if (nextQuestionResponses.length >= 3 && !complete) {
+        setComplete(true);
       }
-      const {
-        data: { user },
-      } = await sb.auth.getUser();
 
-      if (user) {
-        const stepNumbers = Object.entries(answers).map(([question, answer]) => ({
-          user_id: user.id,
-          question,
-          answer: String(answer),
-          step_number: questions.findIndex((q) => q.id === question) + 1,
-        }));
-
-        await sb.from("intake_responses").insert(stepNumbers as unknown as never);
-
-        await sb.from("profiles").insert({
-          id: user.id,
-          full_name: answers.full_name || "Member",
-        } as unknown as never);
-
-        try {
-          await fetch("/api/telehealth/referral", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(answers),
-          });
-        } catch (e) {
-          console.error("Referral error:", e);
-        }
+      if (data.response) {
+        setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+        setStep(s => s + 1);
       }
-
-      router.push("/dashboard");
-    } else {
-      setStep(step + 1);
+    } catch (error) {
+      console.error("AI error:", error);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "Let's wrap this up. I'll pass this to your edge specialist." 
+      }]);
+      setComplete(true);
     }
+
     setLoading(false);
   };
 
-  const handleAnswer = (value: string | number) => {
-    setAnswers({ ...answers, [currentQuestion.id]: value });
+  const handleComplete = async () => {
+    setLoading(true);
+    const sb = getSupabase();
+    if (!sb) return;
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const conversation = messages.map(m => m.content).join("\n");
+
+    await sb.from("intake_responses").insert({
+      user_id: user.id,
+      question: "full_conversation",
+      answer: conversation,
+      step_number: 1,
+    } as unknown as never);
+
+    await sb.from("profiles").insert({
+      id: user.id,
+      full_name: "Member",
+    } as unknown as never);
+
+    router.push("/dashboard");
   };
+
+  if (complete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-navy-deep p-6">
+        <div className="max-w-lg text-center">
+          <p className="font-display text-3xl gold-shimmer mb-6">
+            That's it.
+          </p>
+          <p className="font-body text-grey-muted mb-8">
+            Your edge specialist will be in touch within 24 hours.
+          </p>
+          <button
+            onClick={handleComplete}
+            disabled={loading}
+            className="px-8 py-4 bg-gold text-black font-accent text-sm tracking-wider uppercase hover:bg-gold-light disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Done"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-navy-deep p-6">
       <div className="w-full max-w-2xl">
         <div className="mb-8">
           <p className="font-accent text-gold text-sm tracking-[0.3em] uppercase">
-            Step {step + 1} of {questions.length}
+            Intake
           </p>
-          <div className="h-1 bg-white/10 mt-2">
+        </div>
+
+        <div className="space-y-4 mb-8 max-h-96 overflow-y-auto">
+          {messages.map((msg, i) => (
             <div
-              className="h-full bg-gold transition-all duration-500"
-              style={{ width: `${((step + 1) / questions.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="text-center mb-12">
-          <h1 className="font-display text-4xl text-white mb-4">
-            {currentQuestion.question}
-          </h1>
-          <p className="font-body text-grey-muted">{currentQuestion.subtitle}</p>
-        </div>
-
-        <div className="space-y-6">
-          {currentQuestion.type === "number" ? (
-            <div className="flex justify-center gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleAnswer(num)}
-                  className={`w-16 h-16 font-display text-2xl border transition-colors ${
-                    answers[currentQuestion.id] === num
-                      ? "border-gold bg-gold text-black"
-                      : "border-white/20 text-white hover:border-gold"
-                  }`}
-                >
-                  {num}
-                </button>
-              ))}
+              key={i}
+              className={`${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+            >
+              <div
+                className={`inline-block px-6 py-4 ${
+                  msg.role === 'user'
+                    ? 'bg-gold text-black'
+                    : 'bg-white/10 text-white'
+                }`}
+              >
+                <p className="font-body">{msg.content}</p>
+              </div>
             </div>
-          ) : (
-            <textarea
-              value={(answers[currentQuestion.id] as string) || ""}
-              onChange={(e) => handleAnswer(e.target.value)}
-              rows={4}
-              className="w-full px-6 py-4 bg-grey-warm border border-white/20 text-white font-body focus:outline-none focus:border-gold resize-none"
-              placeholder="Tell us..."
-            />
+          ))}
+          {loading && (
+            <div className="text-left">
+              <div className="inline-block px-6 py-4 bg-white/10">
+                <p className="font-body text-grey-muted">...</p>
+              </div>
+            </div>
           )}
-
-          <button
-            onClick={handleNext}
-            disabled={loading || !answers[currentQuestion.id]}
-            className="w-full py-4 bg-gold text-black font-accent text-sm tracking-wider uppercase hover:bg-gold-light disabled:opacity-50"
-          >
-            {loading
-              ? "Saving..."
-              : isLastStep
-              ? "Complete"
-              : "Continue"}
-          </button>
         </div>
 
-        {step > 0 && (
+        <div className="flex gap-4">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Type your response..."
+            disabled={loading}
+            className="flex-1 px-6 py-4 bg-grey-warm border border-white/20 text-white font-body focus:outline-none focus:border-gold"
+          />
           <button
-            onClick={() => setStep(step - 1)}
-            className="mt-4 text-grey-muted hover:text-white text-sm"
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+            className="px-8 py-4 bg-gold text-black font-accent text-sm tracking-wider uppercase hover:bg-gold-light disabled:opacity-50"
           >
-            ← Back
+            Send
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
