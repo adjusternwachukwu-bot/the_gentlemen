@@ -25,12 +25,12 @@ const bebasi = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: "The Gents | Built for Men Who Perform",
-  description: "Premium men's performance platform. Connect with licensed providers through white-label telehealth. Built for men who perform.",
-  keywords: ["men's performance", "mental edge", "focus", "drive", "telehealth"],
+  description: "Premium men's performance platform. Elite network for men who demand more.",
+  keywords: ["men's performance", "mental edge", "focus", "drive"],
   metadataBase: new URL("https://thegents.xyz"),
   openGraph: {
     title: "The Gents | Built for Men Who Perform",
-    description: "Premium men's performance platform. Connect with licensed providers.",
+    description: "Premium men's performance platform. Elite network.",
     url: "https://thegents.xyz",
     siteName: "The Gents",
     locale: "en_US",

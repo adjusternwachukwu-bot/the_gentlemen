@@ -18,7 +18,7 @@ export function Hero() {
         </h1>
         
         <p className="font-body text-xl md:text-2xl text-grey-muted max-w-2xl mx-auto mb-12 opacity-0 animate-fade-in animate-delay-200">
-          Built for men who perform. Premium access to licensed providers through white-label telehealth. Because your mind is your greatest asset.
+          Built for men who perform. Elite network. Because your mind is your greatest asset.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center opacity-0 animate-fade-in animate-delay-300">

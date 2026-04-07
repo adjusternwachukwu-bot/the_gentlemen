@@ -10,9 +10,9 @@ const tiers = [
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_STARTER_VARIANT_ID || "starter-variant-id",
     features: [
       "AI intake assessment",
-      "1 provider consultation/mo",
-      "Messaging between visits",
-      "Mood + performance tracking",
+      "1 session/mo",
+      "Direct messaging",
+      "Performance tracking",
     ],
     highlighted: false,
   },
@@ -23,8 +23,8 @@ const tiers = [
     variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_MEMBER_VARIANT_ID || "member-variant-id",
     features: [
       "Everything in Starter",
-      "2 consultations/mo",
-      "Medication management",
+      "2 sessions/mo",
+      "Priority support",
       "Priority booking",
     ],
     highlighted: true,
@@ -38,7 +38,7 @@ const tiers = [
     features: [
       "Everything in Member",
       "Unlimited messaging",
-      "Weekly AI check-ins",
+      "Weekly check-ins",
       "Performance dashboard",
       "Priority everything",
     ],

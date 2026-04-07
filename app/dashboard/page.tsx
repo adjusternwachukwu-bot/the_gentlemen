@@ -74,7 +74,7 @@ export default async function Dashboard() {
 
           <a href="/dashboard/messages" className="block p-8 border border-white/10 bg-grey-warm/20 hover:border-gold transition-colors">
             <p className="font-display text-2xl text-white mb-2">Messages</p>
-            <p className="font-body text-sm text-grey-muted">Chat with your provider</p>
+            <p className="font-body text-sm text-grey-muted">Chat with your edge specialist</p>
           </a>
 
           <a href="/dashboard/track" className="block p-8 border border-white/10 bg-grey-warm/20 hover:border-gold transition-colors">

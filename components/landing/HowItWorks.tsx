@@ -2,17 +2,17 @@ const steps = [
   {
     number: "01",
     title: "Tell us where you are",
-    description: "AI-powered intake that feels like a conversation, not a medical form.",
+    description: "Quick intake. We'll handle the rest.",
   },
   {
     number: "02",
-    title: "Meet your performance doctor",
-    description: "Get matched with a licensed provider who understands your goals.",
+    title: "Meet your edge specialist",
+    description: "One-on-one with someone who gets it. No judgment.",
   },
   {
     number: "03",
-    title: "Get your edge back",
-    description: "Ongoing optimization to keep you performing at your peak.",
+    title: "Reclaim your edge",
+    description: "Stay locked in. We keep you sharp.",
   },
 ];
 
