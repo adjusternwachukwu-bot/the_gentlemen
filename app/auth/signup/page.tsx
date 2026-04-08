@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signUp } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
@@ -16,16 +15,24 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
-    const { data, error: signUpError } = await signUp(email, password);
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-    } else if (data.user) {
-      router.push("/onboarding");
-    } else {
-      setError("Check your email to verify your account.");
+      const data = await response.json();
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        router.push("/onboarding");
+      }
+    } catch (err) {
+      setError("Something went wrong. Try again.");
     }
+
     setLoading(false);
   };
 
@@ -34,9 +41,9 @@ export default function SignupPage() {
       <div className="w-full max-w-md p-8 border border-white/10 bg-grey-warm/20">
         <div className="text-center mb-8">
           <p className="font-accent text-gold text-sm tracking-[0.3em] uppercase">
-            The Gentlemen
+            The Gents
           </p>
-          <h1 className="font-display text-3xl text-white mt-4">Create Your Account</h1>
+          <h1 className="font-display text-3xl text-white mt-4">Join the List</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -76,12 +83,12 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full py-4 bg-gold text-black font-accent text-sm tracking-wider uppercase hover:bg-gold-light disabled:opacity-50"
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {loading ? "Processing..." : "Join"}
           </button>
         </form>
 
         <p className="text-center font-body text-sm text-grey-muted mt-6">
-          Already have an account?{" "}
+          Already a member?{" "}
           <a href="/login" className="text-gold hover:underline">
             Sign in
           </a>
