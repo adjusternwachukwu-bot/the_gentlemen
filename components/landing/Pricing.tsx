@@ -7,7 +7,7 @@ const tiers = [
     name: "The Starter",
     tier: "starter",
     price: "99",
-    variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_STARTER_VARIANT_ID || "starter-variant-id",
+    checkoutUrl: "https://gentlemen.lemonsqueezy.com/checkout/buy/79beeee6-9b81-4dc2-bb97-492b6da637e5",
     features: [
       "AI intake assessment",
       "1 session/mo",
@@ -20,7 +20,7 @@ const tiers = [
     name: "The Member",
     tier: "member",
     price: "179",
-    variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_MEMBER_VARIANT_ID || "member-variant-id",
+    checkoutUrl: "https://gentlemen.lemonsqueezy.com/checkout/buy/79beeee6-9b81-4dc2-bb97-492b6da637e5",
     features: [
       "Everything in Starter",
       "2 sessions/mo",
@@ -34,7 +34,7 @@ const tiers = [
     name: "The Gentleman",
     tier: "gentleman",
     price: "299",
-    variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_GENTLEMAN_VARIANT_ID || "gentleman-variant-id",
+    checkoutUrl: "https://gentlemen.lemonsqueezy.com/checkout/buy/79beeee6-9b81-4dc2-bb97-492b6da637e5",
     features: [
       "Everything in Member",
       "Unlimited messaging",
@@ -50,31 +50,11 @@ export function Pricing() {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleSubscribe = async (tier: typeof tiers[0]) => {
-    setLoading(tier.tier);
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          variantId: tier.variantId,
-          email: "",
-          tier: tier.tier,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        window.location.href = "/signup";
-      }
-    } catch {
+    if (tier.checkoutUrl) {
+      window.location.href = tier.checkoutUrl;
+    } else {
       window.location.href = "/signup";
     }
-
-    setLoading(null);
   };
 
   return (
