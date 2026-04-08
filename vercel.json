@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "buildEnv": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://mlxehkizccexcwsbhppy.supabase.co",
+    "NEXT_PUBLIC_APP_URL": "https://thegents.xyz"
+  }
+}
