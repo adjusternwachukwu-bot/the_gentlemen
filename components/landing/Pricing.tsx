@@ -20,7 +20,7 @@ const tiers = [
     name: "The Member",
     tier: "member",
     price: "179",
-    checkoutUrl: "https://gentlemen.lemonsqueezy.com/checkout/buy/79beeee6-9b81-4dc2-bb97-492b6da637e5",
+    checkoutUrl: "https://gentlemen.lemonsqueezy.com/checkout/buy/b983d2d8-9dca-467b-a94c-f04cc38cf5a3",
     features: [
       "Everything in Starter",
       "2 sessions/mo",
